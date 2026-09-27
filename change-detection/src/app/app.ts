@@ -1,28 +1,21 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { interval } from 'rxjs';
 
 @Component({
-  imports: [],
+  imports: [CommonModule],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class App {
-  counter = 0;
+  readonly counter$ = interval(1000);
 
-  readonly changeDetector = inject(ChangeDetectorRef);
-
-  doNothing() { }
-
-  constructor() {
-    setInterval(() => {
-      this.counter++;
-      console.log('Counter: ', this.counter);
-
-    }, 1000);
-
-    setInterval(() => {
-      this.changeDetector.detectChanges();
-    }, 5000)
+  calculateValue() {
+    console.log('Value is calculed');
+    return 42;
   }
+
+  constructor() {}
 }
