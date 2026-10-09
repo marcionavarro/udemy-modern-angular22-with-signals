@@ -1,35 +1,45 @@
-import { ChangeDetectionStrategy, Component, computed, effect, signal } from '@angular/core';
-import { mySignal } from './my-signal';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, linkedSignal, signal } from '@angular/core';
+import { PRODUCTS } from './products';
 
 @Component({
-  imports: [],
+  imports: [CommonModule],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  readonly firstSignal = signal(42);
-  readonly secondSignal = signal('Signals');
-  readonly thirdSignal = signal(10);
+  readonly products = signal(['Apple', 'Banana', 'Cherry']);
 
-  readonly derived = computed(() => this.firstSignal() + this.thirdSignal());
+  readonly selectedProduct = linkedSignal<string[], string>({
+    source: this.products,
+    computation: (prod, prev) => {
+      if (!prev) return prod[0];
+      if (prod.includes(prev.value)) return prev.value;
+      return prod[0];
+    },
+  });
 
-  setSignal() {
-    this.firstSignal.set(10);
-    this.firstSignal.update((value) => value + 1);
-    this.secondSignal.set('Hello');
+  addProduct() {
+    this.products.update((prods) => [...prods, PRODUCTS[prods.length]]);
   }
 
-  updateSignal() {
-    this.firstSignal.update((value) => value + 1);
+  removeProduct() {
+    this.products.update((prods) => prods.slice(0, -1));
   }
 
-  constructor() {
-    effect(() => {
-      console.log('The first signal value is: ', this.firstSignal());
-      console.log('The second signal value is: ', this.secondSignal());
-      this.secondSignal.set('Some Value');
+  nextProduct() {
+    this.selectedProduct.update((selected) => {
+      const index = this.products().indexOf(selected);
+      return this.products()[(index + 1) % this.products().length];
+    });
+  }
+
+  prevProduct() {
+    this.selectedProduct.update((selected) => {
+      const index = this.products().indexOf(selected);
+      return this.products()[(index - 1 + this.products().length) % this.products().length];
     });
   }
 }
