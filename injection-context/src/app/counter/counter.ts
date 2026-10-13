@@ -1,13 +1,4 @@
-import {
-  Component,
-  DestroyRef,
-  inject,
-  Injector,
-  OnInit,
-  runInInjectionContext,
-} from '@angular/core';
-import { interval } from 'rxjs';
-import { startCounting } from '../util';
+import { Component, effect, EffectRef, inject, Injector, signal } from '@angular/core';
 
 @Component({
   imports: [],
@@ -16,15 +7,33 @@ import { startCounting } from '../util';
   templateUrl: './counter.html',
 })
 export class Counter {
-  private dr = inject(DestroyRef);
-  private injector = inject(Injector);
+  readonly value = signal(0);
+
+  readonly injector = inject(Injector);
+
+  ef: EffectRef | null = null;
 
   constructor() {
-    // startCounting();
+    const int = setInterval(() => {
+      this.value.update((v) => v + 1);
+    }, 1000);
   }
 
-  ngOnInit() {
-    // startCounting(this.dr);
-    runInInjectionContext(this.injector, () => startCounting());
+  go() {
+    if (this.ef) return;
+
+    this.ef = effect(
+      () => {
+        console.log(this.value());
+      },
+      {
+        injector: this.injector,
+      },
+    );
+  }
+
+  stop() {
+    this.ef?.destroy();
+    this.ef = null;
   }
 }
